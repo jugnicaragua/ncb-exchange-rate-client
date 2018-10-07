@@ -5,6 +5,26 @@
     <artifactId>ncb-exchange-rate-client</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
+    <description>Herramienta que consulta y retorna los datos de intercambio del cordoba con respecto al Dolar.</description>
+
+    <url>https://github.com/jug-ni/PICO</url>
+    <organization>
+      <name>Java Nicaragua</name>
+      <url>www.javanicaragua.org</url>
+    </organization>
+
+    <licenses>
+  		<license>
+  			<name>Public domain</name>
+  			<url>http://unlicense.org/</url>
+  			<distribution>manual</distribution>
+  		</license>
+  	</licenses>
+
+    <issueManagement>
+      <system>github</system>
+      <url>https://github.com/jug-ni/ncb-exchange-rate-client/issues</url>
+    </issueManagement>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
