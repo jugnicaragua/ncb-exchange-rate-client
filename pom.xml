@@ -39,6 +39,7 @@
 
         <!-- Pluging versions -->
         <jaxws-maven-plugin.version>2.5</jaxws-maven-plugin.version>
+        <maven-jar-plugin.version>3.1.0</maven-jar-plugin.version>
     </properties>
 
     <dependencies>
@@ -69,6 +70,18 @@
                         <wsdlUrl>${ncb.wsdl.url}</wsdlUrl>
                     </wsdlUrls>
                     <verbose>true</verbose>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven-jar-plugin.version}</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>ni.jug.ncb.exchangerate.ExchangeRateCLI</mainClass>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
         </plugins>
