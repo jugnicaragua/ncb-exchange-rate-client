@@ -26,7 +26,7 @@ public class ExchangeRateClient {
         int currentYear = LocalDate.now().getYear();
 
         if (year < MINIMUM_YEAR || year > currentYear) {
-            throw new IllegalArgumentException("El año de consulta debe estar entre [" + MINIMUM_YEAR + ", " + currentYear +
+            throw new IllegalArgumentException("El año de consulta [" + year + "] debe estar entre [" + MINIMUM_YEAR + ", " + currentYear +
                     "] inclusive");
         }
     }

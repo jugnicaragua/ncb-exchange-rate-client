@@ -3,6 +3,8 @@ package ni.jug.ncb.exchangerate;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,50 +20,65 @@ public class ExchangeRateCLI {
 
     private static final String COMMA = ",";
     private static final String SPACE = " ";
-    private static final String COLON = ":";
+    private static final String HYPHEN = "-";
     private static final String PROMPT = "--> ";
+
+    private static final char COLON = ':';
 
     private static final String QUERY_BY_DATE = "-date";
     private static final String QUERY_BY_YEAR_MONTH = "-ym";
 
+    private String messageForWrongDate(String strDate) {
+        return "El valor [" + strDate + "] no es una fecha. Ingrese una fecha en formato ISO";
+    }
+
     private void doAppendExchangeRateByDate(LocalDate date, StringBuilder sb) {
         ExchangeRateClient wsClient = new ExchangeRateClient();
-        BigDecimal exchangeRate = wsClient.getExchangeRate(date);
-        if (sb.length() > 0) {
-            sb.append("\n");
+        BigDecimal exchangeRate;
+
+        try {
+            exchangeRate = wsClient.getExchangeRate(date);
+
+            if (sb.length() > 0) {
+                sb.append("\n");
+            }
+            sb.append(PROMPT + date + COMMA + SPACE + exchangeRate);
+        } catch (IllegalArgumentException iae) {
+            LOGGER.log(Level.SEVERE, iae.getMessage());
         }
-        sb.append(PROMPT + date + COMMA + SPACE + exchangeRate);
     }
 
     private void doAppendExchangeRateByDate(String strDate, StringBuilder sb) {
-        LocalDate date = LocalDate.parse(strDate, DateTimeFormatter.ISO_DATE);
-        doAppendExchangeRateByDate(date, sb);
+        try {
+            LocalDate date = LocalDate.parse(strDate, DateTimeFormatter.ISO_DATE);
+            doAppendExchangeRateByDate(date, sb);
+        } catch (DateTimeParseException dtpe) {
+            LOGGER.log(Level.SEVERE, messageForWrongDate(strDate));
+        }
     }
 
     private void queryBySpecificDates(String value) {
-        LOGGER.info("Obtener tasa de cambio por fecha ");
+        LOGGER.info("Obtener tasa de cambio por fecha");
 
         StringBuilder result = new StringBuilder("Resultados:");
-        if (value.contains(COMMA)) {
-            String[] strDates = value.split("\\,");
+        if (CLIHelper.containsComma(value)) {
+            String[] strDates = CLIHelper.splitCommaSeparatedValue(value);
             for (int i = 0; i < strDates.length; i++) {
                 String strDate = strDates[i];
-                if (strDate.contains(COLON)) {
-                    int pos = strDate.indexOf(COLON);
-                    String strDate1 = strDate.substring(0, pos);
-                    String strDate2 = null;
+                if (CLIHelper.containsColon(strDate)) {
+                    String[] twoDate = CLIHelper.extractTwoValues(strDate, COLON);
 
-                    if (pos < strDate.length() - 1) {
-                        strDate2 = strDate.substring(pos + 1);
-                    }
+                    try {
+                        LocalDate date1 = CLIHelper.toLocalDate(twoDate[0]);
+                        LocalDate date2 = twoDate[1] == null ? LocalDate.of(date1.getYear(), date1.getMonth(), 1).plusMonths(1).minusDays(1) :
+                                CLIHelper.toLocalDate(twoDate[1]);
 
-                    LocalDate date1 = LocalDate.parse(strDate1, DateTimeFormatter.ISO_DATE);
-                    LocalDate date2 = strDate2 == null ? LocalDate.of(date1.getYear(), date1.getMonth(), 1).plusMonths(1).minusDays(1) :
-                            LocalDate.parse(strDate2, DateTimeFormatter.ISO_DATE);
-
-                    while (date1.compareTo(date2) <= 0) {
-                        doAppendExchangeRateByDate(date1, result);
-                        date1 = date1.plusDays(1);
+                        while (date1.compareTo(date2) <= 0) {
+                            doAppendExchangeRateByDate(date1, result);
+                            date1 = date1.plusDays(1);
+                        }
+                    } catch (DateTimeParseException dtpe) {
+                        LOGGER.log(Level.SEVERE, "No se pudo extraer las fechas del valor [" + strDate + "]");
                     }
                 } else {
                     doAppendExchangeRateByDate(strDate, result);
@@ -76,13 +93,79 @@ public class ExchangeRateCLI {
         }
     }
 
-    public void request(String[] args) {
-        String value = CLIHelper.extractArgumentValue(QUERY_BY_DATE, args);
+    private void doAppendMonthlyExchangeRate(LocalDate date, StringBuilder sb) {
+        ExchangeRateClient wsClient = new ExchangeRateClient();
+        MonthlyExchangeRate monthlyExchangeRate;
 
-        if (!value.isEmpty()) {
-            queryBySpecificDates(value);
+        try {
+            monthlyExchangeRate = wsClient.getMonthlyExchangeRate(date);
+
+            if (sb.length() > 0) {
+                sb.append("\n");
+            }
+            for (Map.Entry<LocalDate, BigDecimal> exchangeRateByDate : monthlyExchangeRate.getMonthlyExchangeRate().entrySet()) {
+                sb.append(PROMPT + exchangeRateByDate.getKey() + COMMA + SPACE + exchangeRateByDate.getValue() + "\n");
+            }
+        } catch (IllegalArgumentException iae) {
+            LOGGER.log(Level.SEVERE, iae.getMessage());
+        }
+    }
+
+    private void doAppendMonthlyExchangeRate(String yearMonth, StringBuilder sb) {
+        try {
+            LocalDate date = LocalDate.parse(yearMonth + HYPHEN + "01", DateTimeFormatter.ISO_DATE);
+            doAppendMonthlyExchangeRate(date, sb);
+        } catch (DateTimeParseException dtpe) {
+            LOGGER.log(Level.SEVERE, messageForWrongDate(yearMonth));
+        }
+    }
+
+    private void queryBySpecificYearMonths(String value) {
+        LOGGER.info("Obtener tasa de cambio por año-mes");
+
+        StringBuilder result = new StringBuilder("Resultados:");
+        if (CLIHelper.containsComma(value)) {
+            String[] yearMonths = CLIHelper.splitCommaSeparatedValue(value);
+            for (int i = 0; i < yearMonths.length; i++) {
+                String yearMonth = yearMonths[i];
+                if (CLIHelper.containsColon(yearMonth)) {
+                    String[] twoYearMonth = CLIHelper.extractTwoValues(yearMonth, COLON);
+
+                    try {
+                        LocalDate date1 = CLIHelper.toLocalDate(twoYearMonth[0] + HYPHEN + "01");
+                        LocalDate date2 = twoYearMonth[1] == null ? LocalDate.from(date1) :
+                                CLIHelper.toLocalDate(twoYearMonth[1] + HYPHEN + "01");
+
+                        while (date1.compareTo(date2) <= 0) {
+                            doAppendMonthlyExchangeRate(date1, result);
+                            date1 = date1.plusMonths(1);
+                        }
+                    } catch (DateTimeParseException dtpe) {
+                        LOGGER.log(Level.SEVERE, "No se pudo extraer las fechas del valor [" + yearMonth + "]");
+                    }
+                } else {
+                    doAppendMonthlyExchangeRate(yearMonth, result);
+                }
+            }
+        } else {
+            doAppendMonthlyExchangeRate(value, result);
         }
 
+        if (result.length() > 0) {
+            LOGGER.info(result.toString());
+        }
+    }
+
+    public void request(String[] args) {
+        String queryByDate = CLIHelper.extractArgumentValue(QUERY_BY_DATE, args);
+        String queryByYearMonth = CLIHelper.extractArgumentValue(QUERY_BY_YEAR_MONTH, args);
+
+        if (!queryByDate.isEmpty()) {
+            queryBySpecificDates(queryByDate);
+        }
+        if (!queryByYearMonth.isEmpty()) {
+            queryBySpecificYearMonths(queryByYearMonth);
+        }
     }
 
     public static ExchangeRateCLI create(String[] args) {
@@ -97,6 +180,8 @@ public class ExchangeRateCLI {
         help.append("Opciones disponibles:\n");
         help.append("  -date: se puede consultar por una fecha, lista de fecha o rango de fechas. ");
         help.append("Por ejemplo: -date=[fecha], -date=[fecha1]:[fecha2], -date=[fecha1],[fecha2],...\n");
+        help.append("  -ym: se puede consultar por año-mes. ");
+        help.append("Por ejemplo: -ym=[año]-[mes], -ym=[año1]-[mes1]:[año2]-[mes2], -ym=[año1]-[mes1],[año2]-[mes2],...\n");
         return help.toString();
     }
 
@@ -114,6 +199,9 @@ public class ExchangeRateCLI {
 
         public static final String HYPHEN_STR = "-";
         public static final String EMPTY_STR = "";
+        public static final String COMMA = ",";
+        public static final String COLON = ":";
+
         public static final char EQUAL = '=';
 
         private CLIHelper() {
@@ -150,6 +238,33 @@ public class ExchangeRateCLI {
 
             return EMPTY_STR;
         }
+
+        public static String[] splitCommaSeparatedValue(String csv) {
+            return csv.split("\\,");
+        }
+
+        public static boolean containsComma(String value) {
+            return value.contains(COMMA);
+        }
+
+        public static boolean containsColon(String value) {
+            return value.contains(COLON);
+        }
+
+        public static String[] extractTwoValues(String value, char delimiter) {
+            String[] result = new String[2];
+            int pos = value.indexOf(delimiter);
+            result[0] = value.substring(0, pos);
+            if (pos < value.length() - 1) {
+                result[1] = value.substring(pos + 1);
+            }
+            return result;
+        }
+
+        public static LocalDate toLocalDate(String value) {
+            return LocalDate.parse(value, DateTimeFormatter.ISO_DATE);
+        }
+
     }
 
 }
