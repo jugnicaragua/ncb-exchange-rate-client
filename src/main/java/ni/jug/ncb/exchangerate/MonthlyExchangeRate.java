@@ -22,6 +22,7 @@ public class MonthlyExchangeRate {
     private final LocalDate firstDate;
     private final LocalDate lastDate;
     private final boolean thereIsAGap;
+    private final int size;
 
     public MonthlyExchangeRate(RecuperaTCMesResponse.RecuperaTCMesResult result) {
         valuesByLocalDate = processResult(result);
@@ -29,11 +30,13 @@ public class MonthlyExchangeRate {
             firstDate = null;
             lastDate = null;
             thereIsAGap = false;
+            size = 0;
         } else {
             LocalDate _date = valuesByLocalDate.keySet().iterator().next();
             firstDate = LocalDate.of(_date.getYear(), _date.getMonth(), 1);
             lastDate = firstDate.plusMonths(1).minusDays(1);
             thereIsAGap = valuesByLocalDate.size() != ChronoUnit.DAYS.between(firstDate, lastDate.plusDays(1));
+            size = valuesByLocalDate.size();
         }
     }
 
@@ -82,17 +85,12 @@ public class MonthlyExchangeRate {
     }
 
     public BigDecimal getExchangeRate(LocalDate date) {
+        Objects.requireNonNull(date);
         return valuesByLocalDate.getOrDefault(date, BigDecimal.ZERO);
     }
 
     public BigDecimal getExchangeRate() {
-        LocalDate now = LocalDate.now();
-
-        if (now.compareTo(firstDate) >= 0 && now.compareTo(lastDate) <= 0) {
-            return valuesByLocalDate.getOrDefault(now, BigDecimal.ZERO);
-        } else {
-            return BigDecimal.ZERO;
-        }
+        return valuesByLocalDate.getOrDefault(LocalDate.now(), BigDecimal.ZERO);
     }
 
     public Map<LocalDate, BigDecimal> getExchangeRateBetween(LocalDate date1, LocalDate date2) {
@@ -127,6 +125,10 @@ public class MonthlyExchangeRate {
 
     public boolean getThereIsAGap() {
         return thereIsAGap;
+    }
+
+    public int size() {
+        return size;
     }
 
     @Override

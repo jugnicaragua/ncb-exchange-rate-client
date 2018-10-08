@@ -3,6 +3,7 @@ package ni.jug.ncb.exchangerate;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.Objects;
 import ni.jug.ncb.exchangerate.ws.RecuperaTCMesResponse;
 import ni.jug.ncb.exchangerate.ws.TipoCambioBCN;
 import ni.jug.ncb.exchangerate.ws.TipoCambioBCNSoap;
@@ -35,6 +36,7 @@ public class ExchangeRateClient {
     }
 
     public BigDecimal getExchangeRate(LocalDate date) {
+        Objects.requireNonNull(date);
         doValidateYear(date);
         double taxExchange = getPort().recuperaTCDia(date.getYear(), date.getMonthValue(), date.getDayOfMonth());
         return new BigDecimal(String.valueOf(taxExchange));
@@ -45,6 +47,7 @@ public class ExchangeRateClient {
     }
 
     public MonthlyExchangeRate getMonthlyExchangeRate(int year, Month month) {
+        Objects.requireNonNull(month);
         doValidateYear(year);
         RecuperaTCMesResponse.RecuperaTCMesResult result = getPort().recuperaTCMes(year, month.getValue());
         return new MonthlyExchangeRate(result);
@@ -55,23 +58,12 @@ public class ExchangeRateClient {
     }
 
     public MonthlyExchangeRate getMonthlyExchangeRate(LocalDate date) {
+        Objects.requireNonNull(date);
         return getMonthlyExchangeRate(date.getYear(), date.getMonth());
     }
 
     public MonthlyExchangeRate getCurrentMonthExchangeRate() {
         return getMonthlyExchangeRate(LocalDate.now());
-    }
-
-    public static void main(String[] args) {
-        MonthlyExchangeRate monthlyTaxExchange = new ExchangeRateClient().getCurrentMonthExchangeRate();
-        System.out.println("------> " + monthlyTaxExchange);
-        System.out.println("------> Range: " + monthlyTaxExchange.getExchangeRateBetween(LocalDate.of(2018, 10, 15), LocalDate.of(2018, 10, 7)));
-        System.out.println("------> First: " + monthlyTaxExchange.getFirstExchangeRate());
-        System.out.println("------> Last: " + monthlyTaxExchange.getLastExchangeRate());
-        System.out.println("------> Today: " + monthlyTaxExchange.getExchangeRate());
-        System.out.println("------> There is a gap: " + monthlyTaxExchange.getThereIsAGap());
-
-        System.out.println("------> 2017-11-13: " + new ExchangeRateClient().getExchangeRate(LocalDate.of(2017, 11, 13)));
     }
 
 }

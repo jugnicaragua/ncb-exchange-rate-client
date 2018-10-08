@@ -34,9 +34,21 @@
         <!-- Project properties -->
         <ncb.wsdl.url>https://servicios.bcn.gob.ni/Tc_Servicio/ServicioTC.asmx?WSDL</ncb.wsdl.url>
 
+        <!-- Dependency versions -->
+        <junit.version>5.3.1</junit.version>
+
         <!-- Pluging versions -->
         <jaxws-maven-plugin.version>2.5</jaxws-maven-plugin.version>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
