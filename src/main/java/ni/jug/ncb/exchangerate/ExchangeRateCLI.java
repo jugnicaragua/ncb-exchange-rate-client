@@ -88,7 +88,7 @@ public class ExchangeRateCLI {
                             date1 = date1.plusDays(1);
                         }
                     } catch (DateTimeParseException dtpe) {
-                        LOGGER.log(Level.SEVERE, "No se pudo extraer el rango de fechas del valor [" + strDate + "]");
+                        LOGGER.log(Level.SEVERE, "No se pudo extraer el rango de fechas del valor [{0}]", strDate);
                     }
                 } else {
                     doAppendExchangeRateByDate(strDate, result);
@@ -114,7 +114,12 @@ public class ExchangeRateCLI {
                 sb.append("\n");
             }
             for (Map.Entry<LocalDate, BigDecimal> exchangeRateByDate : monthlyExchangeRate.getMonthlyExchangeRate().entrySet()) {
-                sb.append(PROMPT + exchangeRateByDate.getKey() + COMMA + SPACE + exchangeRateByDate.getValue() + "\n");
+                sb.append(PROMPT);
+                sb.append(exchangeRateByDate.getKey());
+                sb.append(COMMA);
+                sb.append(SPACE);
+                sb.append(exchangeRateByDate.getValue());
+                sb.append("\n");
             }
         } catch (IllegalArgumentException iae) {
             LOGGER.log(Level.SEVERE, iae.getMessage());
@@ -151,7 +156,7 @@ public class ExchangeRateCLI {
                             date1 = date1.plusMonths(1);
                         }
                     } catch (DateTimeParseException dtpe) {
-                        LOGGER.log(Level.SEVERE, "No se pudo extraer el rango de fechas del valor [" + yearMonth + "]");
+                        LOGGER.log(Level.SEVERE, "No se pudo extraer el rango de fechas del valor [{0}]", yearMonth);
                     }
                 } else {
                     doAppendMonthlyExchangeRate(yearMonth, result);
