@@ -27,6 +27,16 @@ public class ExchangeRateCLI {
 
     private static final String QUERY_BY_DATE = "-date";
     private static final String QUERY_BY_YEAR_MONTH = "-ym";
+    private static final String HELP = "--help";
+
+    private static final StringBuilder help = new StringBuilder();
+    static {
+        help.append("Opciones disponibles:\n");
+        help.append("  -date: se puede consultar por una fecha, lista de fecha o rango de fechas. ");
+        help.append("Por ejemplo: -date=[fecha], -date=[fecha1]:[fecha2], -date=[fecha1],[fecha2],...\n");
+        help.append("  -ym: se puede consultar por año-mes. ");
+        help.append("Por ejemplo: -ym=[año]-[mes], -ym=[año1]-[mes1]:[año2]-[mes2], -ym=[año1]-[mes1],[año2]-[mes2],...\n");
+    }
 
     private String messageForWrongDate(String strDate) {
         return "El valor [" + strDate + "] no es una fecha. Ingrese una fecha en formato ISO";
@@ -70,15 +80,15 @@ public class ExchangeRateCLI {
 
                     try {
                         LocalDate date1 = CLIHelper.toLocalDate(twoDate[0]);
-                        LocalDate date2 = twoDate[1] == null ? LocalDate.of(date1.getYear(), date1.getMonth(), 1).plusMonths(1).minusDays(1) :
-                                CLIHelper.toLocalDate(twoDate[1]);
+                        LocalDate date2 = twoDate[1] == null ? LocalDate.of(date1.getYear(), date1.getMonth(), 1)
+                                .plusMonths(1).minusDays(1) : CLIHelper.toLocalDate(twoDate[1]);
 
                         while (date1.compareTo(date2) <= 0) {
                             doAppendExchangeRateByDate(date1, result);
                             date1 = date1.plusDays(1);
                         }
                     } catch (DateTimeParseException dtpe) {
-                        LOGGER.log(Level.SEVERE, "No se pudo extraer las fechas del valor [" + strDate + "]");
+                        LOGGER.log(Level.SEVERE, "No se pudo extraer el rango de fechas del valor [" + strDate + "]");
                     }
                 } else {
                     doAppendExchangeRateByDate(strDate, result);
@@ -141,7 +151,7 @@ public class ExchangeRateCLI {
                             date1 = date1.plusMonths(1);
                         }
                     } catch (DateTimeParseException dtpe) {
-                        LOGGER.log(Level.SEVERE, "No se pudo extraer las fechas del valor [" + yearMonth + "]");
+                        LOGGER.log(Level.SEVERE, "No se pudo extraer el rango de fechas del valor [" + yearMonth + "]");
                     }
                 } else {
                     doAppendMonthlyExchangeRate(yearMonth, result);
@@ -157,14 +167,18 @@ public class ExchangeRateCLI {
     }
 
     public void request(String[] args) {
-        String queryByDate = CLIHelper.extractArgumentValue(QUERY_BY_DATE, args);
-        String queryByYearMonth = CLIHelper.extractArgumentValue(QUERY_BY_YEAR_MONTH, args);
+        // Extraer primero los valores para disparar validaciones
+        String queryByDate = CLIHelper.extractOptionValue(QUERY_BY_DATE, args);
+        String queryByYearMonth = CLIHelper.extractOptionValue(QUERY_BY_YEAR_MONTH, args);
 
         if (!queryByDate.isEmpty()) {
             queryBySpecificDates(queryByDate);
         }
         if (!queryByYearMonth.isEmpty()) {
             queryBySpecificYearMonths(queryByYearMonth);
+        }
+        if (CLIHelper.optionIsPresent(HELP, args)) {
+            printUsage();
         }
     }
 
@@ -175,14 +189,8 @@ public class ExchangeRateCLI {
         return new ExchangeRateCLI();
     }
 
-    public static String usage() {
-        StringBuilder help = new StringBuilder();
-        help.append("Opciones disponibles:\n");
-        help.append("  -date: se puede consultar por una fecha, lista de fecha o rango de fechas. ");
-        help.append("Por ejemplo: -date=[fecha], -date=[fecha1]:[fecha2], -date=[fecha1],[fecha2],...\n");
-        help.append("  -ym: se puede consultar por año-mes. ");
-        help.append("Por ejemplo: -ym=[año]-[mes], -ym=[año1]-[mes1]:[año2]-[mes2], -ym=[año1]-[mes1],[año2]-[mes2],...\n");
-        return help.toString();
+    public static void printUsage() {
+        LOGGER.info(help.toString());
     }
 
     public static void main(String[] args) {
@@ -191,24 +199,25 @@ public class ExchangeRateCLI {
             cli.request(args);
         } catch (IllegalArgumentException iae) {
             LOGGER.log(Level.SEVERE, iae.getMessage());
-            LOGGER.info(usage());
+            printUsage();
         }
     }
 
     private static class CLIHelper {
 
-        public static final String HYPHEN_STR = "-";
-        public static final String EMPTY_STR = "";
-        public static final String COMMA = ",";
-        public static final String COLON = ":";
+        private static final String HYPHEN_STR = "-";
+        private static final String DOUBLE_HYPHEN_STR = "--";
+        private static final String EMPTY_STR = "";
+        private static final String COMMA = ",";
+        private static final String COLON = ":";
 
-        public static final char EQUAL = '=';
+        private static final char EQUAL = '=';
 
         private CLIHelper() {
         }
 
-        private static boolean thereIsNoHyphen(String namedArgument) {
-            return !namedArgument.startsWith(HYPHEN_STR);
+        private static boolean thereIsNoOptionIndicator(String namedArgument) {
+            return !(namedArgument.startsWith(HYPHEN_STR) || namedArgument.startsWith(DOUBLE_HYPHEN_STR));
         }
 
         private static boolean thereIsNoAssignment(String argument) {
@@ -220,10 +229,15 @@ public class ExchangeRateCLI {
             return pos == argument.length() - 1 ? EMPTY_STR : argument.substring(pos + 1);
         }
 
-        public static String extractArgumentValue(String namedArgument, String[] args) {
-            if (thereIsNoHyphen(namedArgument)) {
-                namedArgument = "-" + namedArgument;
+        private static void doValidateNamedArgument(String namedArgument) {
+            if (thereIsNoOptionIndicator(namedArgument)) {
+                throw new IllegalArgumentException("Para extraer el valor de una opción se debe usar guión o guiones en el " +
+                        "nombre de la opción [" + namedArgument + "]");
             }
+        }
+
+        public static String extractOptionValue(String namedArgument, String[] args) {
+            doValidateNamedArgument(namedArgument);
 
             for (int i = 0; i < args.length; i++) {
                 if (args[i].startsWith(namedArgument)) {
@@ -237,6 +251,17 @@ public class ExchangeRateCLI {
             }
 
             return EMPTY_STR;
+        }
+
+        public static boolean optionIsPresent(String namedArgument, String[] args) {
+            doValidateNamedArgument(namedArgument);
+
+            for (int i = 0; i < args.length; i++) {
+                if (args[i].startsWith(namedArgument)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public static String[] splitCommaSeparatedValue(String csv) {
