@@ -52,7 +52,7 @@ public class ExchangeRateCLI {
             if (sb.length() > 0) {
                 sb.append("\n");
             }
-            sb.append(PROMPT + date + COMMA + SPACE + exchangeRate);
+            sb.append(PROMPT).append(date).append(COMMA).append(SPACE).append(exchangeRate);
         } catch (IllegalArgumentException iae) {
             LOGGER.log(Level.SEVERE, iae.getMessage());
         }
@@ -71,7 +71,7 @@ public class ExchangeRateCLI {
         LOGGER.info("Obtener tasa de cambio por fecha");
 
         StringBuilder result = new StringBuilder("Resultados:");
-        if (CLIHelper.containsComma(value)) {
+        if (CLIHelper.containsComma(value) || CLIHelper.containsColon(value)) {
             String[] strDates = CLIHelper.splitCommaSeparatedValue(value);
             for (int i = 0; i < strDates.length; i++) {
                 String strDate = strDates[i];
@@ -139,7 +139,7 @@ public class ExchangeRateCLI {
         LOGGER.info("Obtener tasa de cambio por año-mes");
 
         StringBuilder result = new StringBuilder("Resultados:");
-        if (CLIHelper.containsComma(value)) {
+        if (CLIHelper.containsComma(value) || CLIHelper.containsColon(value)) {
             String[] yearMonths = CLIHelper.splitCommaSeparatedValue(value);
             for (int i = 0; i < yearMonths.length; i++) {
                 String yearMonth = yearMonths[i];
@@ -148,7 +148,7 @@ public class ExchangeRateCLI {
 
                     try {
                         LocalDate date1 = CLIHelper.toLocalDate(twoYearMonth[0] + HYPHEN + "01");
-                        LocalDate date2 = twoYearMonth[1] == null ? LocalDate.from(date1) :
+                        LocalDate date2 = twoYearMonth[1] == null ? getCurrentDateOrLastDayOf(date1) :
                                 CLIHelper.toLocalDate(twoYearMonth[1] + HYPHEN + "01");
 
                         while (date1.compareTo(date2) <= 0) {
@@ -196,6 +196,11 @@ public class ExchangeRateCLI {
 
     public static void printUsage() {
         LOGGER.info(help.toString());
+    }
+
+    private static LocalDate getCurrentDateOrLastDayOf(LocalDate pastDate) {
+        LocalDate now = LocalDate.now();
+        return pastDate.compareTo(now) <= 0 ? now : LocalDate.of(pastDate.getYear(), pastDate.getMonth(), 1).plusMonths(1).minusDays(1);
     }
 
     public static void main(String[] args) {
