@@ -38,7 +38,7 @@ Esta diseñado para aplicarse desde la consola con motivo de testing, pero su fu
 
 ## License
 
-[MIT](http://opensource.org/licenses/MIT)
+[Public Domain](http://unlicense.org/)
 
 Copyright (c) 2018-present, JUG Nicaragua Armando Alaniz
 
