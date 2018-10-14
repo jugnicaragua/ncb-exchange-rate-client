@@ -79,7 +79,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>ni.jug.ncb.exchangerate.ExchangeRateCLI</mainClass>
+                            <mainClass>ni.jug.ncb.exchangerate.cli.ExchangeRateCLI</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
