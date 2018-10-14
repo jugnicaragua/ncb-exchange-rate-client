@@ -1,8 +1,5 @@
 package ni.jug.ncb.exchangerate.cli;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
 /**
  *
  * @author Armando Alaniz
@@ -92,10 +89,6 @@ public final class CLIHelper {
             result[1] = value.substring(pos + 1);
         }
         return result;
-    }
-
-    public static LocalDate toLocalDate(String value) {
-        return LocalDate.parse(value, DateTimeFormatter.ISO_DATE);
     }
 
     public static class OptionRangeValue {

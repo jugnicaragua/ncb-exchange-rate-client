@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import ni.jug.ncb.exchangerate.Dates;
 import ni.jug.ncb.exchangerate.ExchangeRateClient;
 import ni.jug.ncb.exchangerate.MonthlyExchangeRate;
 
@@ -22,7 +23,6 @@ public class ExchangeRateCLI {
 
     private static final String COMMA = ",";
     private static final String SPACE = " ";
-    private static final String HYPHEN = "-";
     private static final String PROMPT = "--> ";
 
     private static final String QUERY_BY_DATE = "-date";
@@ -32,6 +32,7 @@ public class ExchangeRateCLI {
     private static final StringBuilder help = new StringBuilder();
     static {
         help.append("Opciones disponibles:\n");
+        help.append("---------------------\n");
         help.append("  -date: se puede consultar por una fecha, lista de fecha o rango de fechas. ");
         help.append("Por ejemplo: -date=[fecha], -date=[fecha1]:[fecha2], -date=[fecha1],[fecha2],...\n");
         help.append("  -ym: se puede consultar por año-mes. ");
@@ -82,9 +83,8 @@ public class ExchangeRateCLI {
                 String[] twoDate = range.getRange();
 
                 try {
-                    LocalDate date1 = CLIHelper.toLocalDate(twoDate[0]);
-                    LocalDate date2 = twoDate[1] == null ? LocalDate.of(date1.getYear(), date1.getMonth(), 1)
-                            .plusMonths(1).minusDays(1) : CLIHelper.toLocalDate(twoDate[1]);
+                    LocalDate date1 = Dates.toLocalDate(twoDate[0]);
+                    LocalDate date2 = twoDate[1] == null ? Dates.getLastDateOfMonthOf(date1) : Dates.toLocalDate(twoDate[1]);
 
                     while (date1.compareTo(date2) <= 0) {
                         doAppendExchangeRateByDate(date1, result);
@@ -128,7 +128,7 @@ public class ExchangeRateCLI {
 
     private void doAppendMonthlyExchangeRate(String yearMonth, StringBuilder sb) {
         try {
-            LocalDate date = LocalDate.parse(yearMonth + HYPHEN + "01", DateTimeFormatter.ISO_DATE);
+            LocalDate date = Dates.toFirstDateOfYearMonth(yearMonth);
             doAppendMonthlyExchangeRate(date, sb);
         } catch (DateTimeParseException dtpe) {
             LOGGER.log(Level.SEVERE, messageForWrongDate(yearMonth));
@@ -144,15 +144,15 @@ public class ExchangeRateCLI {
             Object obj = optionListValue.getValues()[i];
 
             if (obj instanceof String) {
-                doAppendMonthlyExchangeRate(value, result);
+                doAppendMonthlyExchangeRate((String) obj, result);
             } else if (obj instanceof CLIHelper.OptionRangeValue) {
                 CLIHelper.OptionRangeValue range = (CLIHelper.OptionRangeValue) obj;
                 String[] twoYearMonth = range.getRange();
 
                 try {
-                    LocalDate date1 = CLIHelper.toLocalDate(twoYearMonth[0] + HYPHEN + "01");
-                    LocalDate date2 = twoYearMonth[1] == null ? getCurrentDateOrLastDayOf(date1) :
-                            CLIHelper.toLocalDate(twoYearMonth[1] + HYPHEN + "01");
+                    LocalDate date1 = Dates.toFirstDateOfYearMonth(twoYearMonth[0]);
+                    LocalDate date2 = twoYearMonth[1] == null ? Dates.getCurrentDateOrLastDayOf(date1) :
+                            Dates.toFirstDateOfYearMonth(twoYearMonth[1]);
 
                     while (date1.compareTo(date2) <= 0) {
                         doAppendMonthlyExchangeRate(date1, result);
@@ -196,11 +196,6 @@ public class ExchangeRateCLI {
 
     public static void printUsage() {
         LOGGER.info(help.toString());
-    }
-
-    private static LocalDate getCurrentDateOrLastDayOf(LocalDate pastDate) {
-        LocalDate now = LocalDate.now();
-        return pastDate.compareTo(now) <= 0 ? now : LocalDate.of(pastDate.getYear(), pastDate.getMonth(), 1).plusMonths(1).minusDays(1);
     }
 
     public static void main(String[] args) {
