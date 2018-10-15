@@ -63,7 +63,7 @@ Ejemplos:
 
 ## Licencia
 
-[MIT](http://opensource.org/licenses/MIT)
+[Public Domain](http://unlicense.org/)
 
 Copyright (c) 2018-present, JUG Nicaragua Armando Alaniz
 
