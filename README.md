@@ -63,8 +63,12 @@ Ejemplos:
 
 ## Licencia
 
-[MIT](http://opensource.org/licenses/MIT)
+This software is covered under the MIT Licence (http://opensource.org/licenses/MIT).
+
+Puedes leer el archivo de la licencia en [LICENSE][license]
 
 Copyright (c) 2018-present, JUG Nicaragua Armando Alaniz
 
 **Free Software, Hell Yeah!**
+
+[license]: LICENSE.txt
