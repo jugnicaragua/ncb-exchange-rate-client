@@ -32,7 +32,6 @@ public class ExchangeRateCLI {
     private static final StringBuilder help = new StringBuilder();
     static {
         help.append("Opciones disponibles:\n");
-        help.append("---------------------\n");
         help.append("  -date: se puede consultar por una fecha, lista de fecha o rango de fechas. ");
         help.append("Por ejemplo: -date=[fecha], -date=[fecha1]:[fecha2], -date=[fecha1],[fecha2],...\n");
         help.append("  -ym: se puede consultar por año-mes. ");
@@ -85,6 +84,10 @@ public class ExchangeRateCLI {
                 try {
                     LocalDate date1 = Dates.toLocalDate(twoDate[0]);
                     LocalDate date2 = twoDate[1] == null ? Dates.getLastDateOfMonthOf(date1) : Dates.toLocalDate(twoDate[1]);
+                    LocalDate[] dates = Dates.getSortedDates(date1, date2);
+
+                    date1 = dates[0];
+                    date2 = dates[1];
 
                     while (date1.compareTo(date2) <= 0) {
                         doAppendExchangeRateByDate(date1, result);
@@ -153,6 +156,10 @@ public class ExchangeRateCLI {
                     LocalDate date1 = Dates.toFirstDateOfYearMonth(twoYearMonth[0]);
                     LocalDate date2 = twoYearMonth[1] == null ? Dates.getCurrentDateOrLastDayOf(date1) :
                             Dates.toFirstDateOfYearMonth(twoYearMonth[1]);
+                    LocalDate[] dates = Dates.getSortedDates(date1, date2);
+
+                    date1 = dates[0];
+                    date2 = dates[1];
 
                     while (date1.compareTo(date2) <= 0) {
                         doAppendMonthlyExchangeRate(date1, result);

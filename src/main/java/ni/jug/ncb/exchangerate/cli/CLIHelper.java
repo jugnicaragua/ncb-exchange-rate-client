@@ -15,7 +15,6 @@ public final class CLIHelper {
     private static final String COLON_STR = ":";
 
     private static final char COLON = ':';
-
     private static final char EQUAL = '=';
 
     private CLIHelper() {
@@ -91,6 +90,10 @@ public final class CLIHelper {
         return result;
     }
 
+    private static String[] extractTwoValues(String value) {
+        return extractTwoValues(value, COLON);
+    }
+
     public static class OptionRangeValue {
 
         private final String raw;
@@ -98,7 +101,7 @@ public final class CLIHelper {
 
         public OptionRangeValue(String raw) {
             this.raw = raw;
-            this.range = CLIHelper.extractTwoValues(raw, COLON);
+            this.range = CLIHelper.extractTwoValues(raw);
         }
 
         public String getRaw() {

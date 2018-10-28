@@ -33,4 +33,16 @@ public final class Dates {
         return LocalDate.parse(yearMonth + HYPHEN + "01", DateTimeFormatter.ISO_DATE);
     }
 
+    public static LocalDate[] getSortedDates(LocalDate date1, LocalDate date2) {
+        LocalDate[] dates = new LocalDate[2];
+        if (date1.isBefore(date2)) {
+            dates[0] = date1;
+            dates[1] = date2;
+        } else {
+            dates[0] = date2;
+            dates[1] = date1;
+        }
+        return dates;
+    }
+
 }
