@@ -70,7 +70,7 @@ public class ExchangeRateCLI {
     private void queryBySpecificDates(String value) {
         LOGGER.info("Obtener tasa de cambio por fecha");
 
-        StringBuilder result = new StringBuilder("Resultados:");
+        StringBuilder result = new StringBuilder(SPACE);
         CLIHelper.OptionListValue optionListValue = new CLIHelper.OptionListValue(value);
         for (int i = 0; i < optionListValue.getSize(); i++) {
             Object obj = optionListValue.getValues()[i];
@@ -84,10 +84,8 @@ public class ExchangeRateCLI {
                 try {
                     LocalDate date1 = Dates.toLocalDate(twoDate[0]);
                     LocalDate date2 = twoDate[1] == null ? Dates.getLastDateOfMonthOf(date1) : Dates.toLocalDate(twoDate[1]);
-                    LocalDate[] dates = Dates.getSortedDates(date1, date2);
 
-                    date1 = dates[0];
-                    date2 = dates[1];
+                    Dates.validateDate1IsBeforeDate2(date1, date2);
 
                     while (date1.compareTo(date2) <= 0) {
                         doAppendExchangeRateByDate(date1, result);
@@ -95,6 +93,8 @@ public class ExchangeRateCLI {
                     }
                 } catch (DateTimeParseException dtpe) {
                     LOGGER.log(Level.SEVERE, "No se pudo extraer el rango de fechas del valor [{0}]", range.getRaw());
+                } catch (IllegalArgumentException iae) {
+                    LOGGER.log(Level.SEVERE, iae.getMessage());
                 }
             } else {
                 throw new IllegalStateException("Tipo de dato no reconocido");
@@ -141,7 +141,7 @@ public class ExchangeRateCLI {
     private void queryBySpecificYearMonths(String value) {
         LOGGER.info("Obtener tasa de cambio por año-mes");
 
-        StringBuilder result = new StringBuilder("Resultados:");
+        StringBuilder result = new StringBuilder(SPACE);
         CLIHelper.OptionListValue optionListValue = new CLIHelper.OptionListValue(value);
         for (int i = 0; i < optionListValue.getSize(); i++) {
             Object obj = optionListValue.getValues()[i];
@@ -156,10 +156,8 @@ public class ExchangeRateCLI {
                     LocalDate date1 = Dates.toFirstDateOfYearMonth(twoYearMonth[0]);
                     LocalDate date2 = twoYearMonth[1] == null ? Dates.getCurrentDateOrLastDayOf(date1) :
                             Dates.toFirstDateOfYearMonth(twoYearMonth[1]);
-                    LocalDate[] dates = Dates.getSortedDates(date1, date2);
 
-                    date1 = dates[0];
-                    date2 = dates[1];
+                    Dates.validateDate1IsBeforeDate2(date1, date2);
 
                     while (date1.compareTo(date2) <= 0) {
                         doAppendMonthlyExchangeRate(date1, result);
@@ -167,6 +165,8 @@ public class ExchangeRateCLI {
                     }
                 } catch (DateTimeParseException dtpe) {
                     LOGGER.log(Level.SEVERE, "No se pudo extraer el rango de fechas del valor [{0}]", range.getRaw());
+                } catch (IllegalArgumentException iae) {
+                    LOGGER.log(Level.SEVERE, iae.getMessage());
                 }
             } else {
                 throw new IllegalStateException("Tipo de dato no reconocido");
@@ -178,10 +178,10 @@ public class ExchangeRateCLI {
         }
     }
 
-    public void request(String[] args) {
+    public void handleRequest(String[] args) {
         // Extraer primero los valores para disparar validaciones
-        String queryByDate = CLIHelper.extractOptionRawValue(QUERY_BY_DATE, args);
-        String queryByYearMonth = CLIHelper.extractOptionRawValue(QUERY_BY_YEAR_MONTH, args);
+        String queryByDate = CLIHelper.findOptionValueOf(QUERY_BY_DATE, args);
+        String queryByYearMonth = CLIHelper.findOptionValueOf(QUERY_BY_YEAR_MONTH, args);
 
         if (!queryByDate.isEmpty()) {
             queryBySpecificDates(queryByDate);
@@ -208,7 +208,7 @@ public class ExchangeRateCLI {
     public static void main(String[] args) {
         try {
             ExchangeRateCLI cli = ExchangeRateCLI.create(args);
-            cli.request(args);
+            cli.handleRequest(args);
         } catch (IllegalArgumentException iae) {
             LOGGER.log(Level.SEVERE, iae.getMessage());
             printUsage();

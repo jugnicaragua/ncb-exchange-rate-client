@@ -28,7 +28,7 @@ public final class CLIHelper {
         return argument.indexOf(EQUAL) == -1;
     }
 
-    private static String getOptionRawValue(String argument) {
+    private static String findOptionValueOf(String argument) {
         int pos = argument.indexOf(EQUAL);
         return pos == argument.length() - 1 ? EMPTY_STR : argument.substring(pos + 1);
     }
@@ -40,7 +40,7 @@ public final class CLIHelper {
         }
     }
 
-    public static String extractOptionRawValue(String namedArgument, String[] args) {
+    public static String findOptionValueOf(String namedArgument, String[] args) {
         doValidateNamedArgument(namedArgument);
 
         for (int i = 0; i < args.length; i++) {
@@ -50,7 +50,7 @@ public final class CLIHelper {
                             + "especificar un valor usando el signo igual (=)");
                 }
 
-                return getOptionRawValue(args[i]);
+                return findOptionValueOf(args[i]);
             }
         }
 

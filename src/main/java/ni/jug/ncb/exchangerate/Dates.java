@@ -33,16 +33,10 @@ public final class Dates {
         return LocalDate.parse(yearMonth + HYPHEN + "01", DateTimeFormatter.ISO_DATE);
     }
 
-    public static LocalDate[] getSortedDates(LocalDate date1, LocalDate date2) {
-        LocalDate[] dates = new LocalDate[2];
-        if (date1.isBefore(date2)) {
-            dates[0] = date1;
-            dates[1] = date2;
-        } else {
-            dates[0] = date2;
-            dates[1] = date1;
+    public static void validateDate1IsBeforeDate2(LocalDate date1, LocalDate date2) throws IllegalArgumentException {
+        if (date1.isAfter(date2)) {
+            throw new IllegalArgumentException("Rango de fecha invalido: la fecha1 debe ser menor o igual a fecha2");
         }
-        return dates;
     }
 
 }
