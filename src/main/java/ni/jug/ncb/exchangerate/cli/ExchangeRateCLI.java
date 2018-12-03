@@ -79,11 +79,10 @@ public class ExchangeRateCLI {
                 doAppendExchangeRateByDate((String) obj, result);
             } else if (obj instanceof CLIHelper.OptionRangeValue) {
                 CLIHelper.OptionRangeValue range = (CLIHelper.OptionRangeValue) obj;
-                String[] twoDate = range.getRange();
 
                 try {
-                    LocalDate date1 = Dates.toLocalDate(twoDate[0]);
-                    LocalDate date2 = twoDate[1] == null ? Dates.getLastDateOfMonthOf(date1) : Dates.toLocalDate(twoDate[1]);
+                    LocalDate date1 = Dates.toLocalDate(range.getFrom());
+                    LocalDate date2 = range.getTo() == null ? Dates.getLastDateOfMonthOf(date1) : Dates.toLocalDate(range.getTo());
 
                     Dates.validateDate1IsBeforeDate2(date1, date2);
 
@@ -150,12 +149,11 @@ public class ExchangeRateCLI {
                 doAppendMonthlyExchangeRate((String) obj, result);
             } else if (obj instanceof CLIHelper.OptionRangeValue) {
                 CLIHelper.OptionRangeValue range = (CLIHelper.OptionRangeValue) obj;
-                String[] twoYearMonth = range.getRange();
 
                 try {
-                    LocalDate date1 = Dates.toFirstDateOfYearMonth(twoYearMonth[0]);
-                    LocalDate date2 = twoYearMonth[1] == null ? Dates.getCurrentDateOrLastDayOf(date1) :
-                            Dates.toFirstDateOfYearMonth(twoYearMonth[1]);
+                    LocalDate date1 = Dates.toFirstDateOfYearMonth(range.getFrom());
+                    LocalDate date2 = range.getTo() == null ? Dates.getCurrentDateOrLastDayOf(date1) :
+                            Dates.toFirstDateOfYearMonth(range.getTo());
 
                     Dates.validateDate1IsBeforeDate2(date1, date2);
 

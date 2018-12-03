@@ -97,19 +97,26 @@ public final class CLIHelper {
     public static class OptionRangeValue {
 
         private final String raw;
-        private final String[] range;
+        private final String from;
+        private final String to;
 
         public OptionRangeValue(String raw) {
+            String[] rangeValues = CLIHelper.extractTwoValues(raw);
             this.raw = raw;
-            this.range = CLIHelper.extractTwoValues(raw);
+            this.from = rangeValues[0];
+            this.to = rangeValues[1];
         }
 
         public String getRaw() {
             return raw;
         }
 
-        public String[] getRange() {
-            return range;
+        public String getFrom() {
+            return from;
+        }
+
+        public String getTo() {
+            return to;
         }
 
     }

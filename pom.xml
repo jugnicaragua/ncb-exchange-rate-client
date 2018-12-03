@@ -7,7 +7,7 @@
     <packaging>jar</packaging>
     <description>Herramienta que consulta y retorna los datos de intercambio del córdoba con respecto al dólar</description>
 
-    <url>https://github.com/jug-ni/PICO</url>
+    <url>https://github.com/jug-ni/ncb-exchange-rate-client</url>
     <organization>
         <name>Java Nicaragua</name>
         <url>www.javanicaragua.org</url>
