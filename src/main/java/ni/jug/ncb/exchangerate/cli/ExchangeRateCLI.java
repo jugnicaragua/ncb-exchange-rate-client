@@ -168,6 +168,10 @@ public class ExchangeRateCLI {
     }
 
     public void handleRequest(String[] args) {
+        if (args.length == 0) {
+            throw new IllegalArgumentException("No se especificaron argumentos");
+        }
+
         // Extraer primero los valores para disparar validaciones
         String queryByDate = CLIHelper.findOptionValueOf(QUERY_BY_DATE, args);
         String queryByYearMonth = CLIHelper.findOptionValueOf(QUERY_BY_YEAR_MONTH, args);
@@ -183,21 +187,13 @@ public class ExchangeRateCLI {
         }
     }
 
-    public static ExchangeRateCLI create(String[] args) {
-        if (args.length == 0) {
-            throw new IllegalArgumentException("No se especificaron argumentos");
-        }
-        return new ExchangeRateCLI();
-    }
-
     public static void printUsage() {
         LOGGER.info(help.toString());
     }
 
     public static void main(String[] args) {
         try {
-            ExchangeRateCLI cli = ExchangeRateCLI.create(args);
-            cli.handleRequest(args);
+            new ExchangeRateCLI().handleRequest(args);
         } catch (IllegalArgumentException iae) {
             LOGGER.log(Level.SEVERE, iae.getMessage());
             printUsage();
