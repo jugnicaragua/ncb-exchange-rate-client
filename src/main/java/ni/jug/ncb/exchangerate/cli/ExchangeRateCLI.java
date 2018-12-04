@@ -2,7 +2,6 @@ package ni.jug.ncb.exchangerate.cli;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.logging.Level;
@@ -42,13 +41,8 @@ public class ExchangeRateCLI {
         return "El valor [" + strDate + "] no es una fecha. Ingrese una fecha en formato ISO";
     }
 
-    private void doAppendExchangeRateByDate(LocalDate date, StringBuilder sb) {
-        ExchangeRateClient wsClient = new ExchangeRateClient();
-        BigDecimal exchangeRate;
-
+    private void doAppendExchangeRateByDate(LocalDate date, BigDecimal exchangeRate, StringBuilder sb) {
         try {
-            exchangeRate = wsClient.getExchangeRate(date);
-
             if (sb.length() > 0) {
                 sb.append("\n");
             }
@@ -58,17 +52,10 @@ public class ExchangeRateCLI {
         }
     }
 
-    private void doAppendExchangeRateByDate(String strDate, StringBuilder sb) {
-        try {
-            LocalDate date = LocalDate.parse(strDate, DateTimeFormatter.ISO_DATE);
-            doAppendExchangeRateByDate(date, sb);
-        } catch (DateTimeParseException dtpe) {
-            LOGGER.log(Level.SEVERE, messageForWrongDate(strDate));
-        }
-    }
-
     private void queryBySpecificDates(String value) {
         LOGGER.info("Obtener tasa de cambio por fecha");
+        ExchangeRateClient wsClient = new ExchangeRateClient();
+        BigDecimal exchangeRate;
 
         StringBuilder result = new StringBuilder(SPACE);
         CLIHelper.OptionListValue optionListValue = new CLIHelper.OptionListValue(value);
@@ -76,7 +63,16 @@ public class ExchangeRateCLI {
             Object obj = optionListValue.getValues()[i];
 
             if (obj instanceof String) {
-                doAppendExchangeRateByDate((String) obj, result);
+                String strDate = (String) obj;
+
+                try {
+                    LocalDate date = Dates.toLocalDate(strDate);
+                    exchangeRate = wsClient.getExchangeRate(date);
+
+                    doAppendExchangeRateByDate(date, exchangeRate, result);
+                } catch (DateTimeParseException dtpe) {
+                    LOGGER.log(Level.SEVERE, messageForWrongDate(strDate));
+                }
             } else if (obj instanceof CLIHelper.OptionRangeValue) {
                 CLIHelper.OptionRangeValue range = (CLIHelper.OptionRangeValue) obj;
 
@@ -87,7 +83,8 @@ public class ExchangeRateCLI {
                     Dates.validateDate1IsBeforeDate2(date1, date2);
 
                     while (date1.compareTo(date2) <= 0) {
-                        doAppendExchangeRateByDate(date1, result);
+                        exchangeRate = wsClient.getExchangeRate(date1);
+                        doAppendExchangeRateByDate(date1, exchangeRate, result);
                         date1 = date1.plusDays(1);
                     }
                 } catch (DateTimeParseException dtpe) {
@@ -105,40 +102,24 @@ public class ExchangeRateCLI {
         }
     }
 
-    private void doAppendMonthlyExchangeRate(LocalDate date, StringBuilder sb) {
-        ExchangeRateClient wsClient = new ExchangeRateClient();
-        MonthlyExchangeRate monthlyExchangeRate;
-
-        try {
-            monthlyExchangeRate = wsClient.getMonthlyExchangeRate(date);
-
-            if (sb.length() > 0) {
-                sb.append("\n");
-            }
-            for (Map.Entry<LocalDate, BigDecimal> exchangeRateByDate : monthlyExchangeRate.getMonthlyExchangeRate().entrySet()) {
-                sb.append(PROMPT);
-                sb.append(exchangeRateByDate.getKey());
-                sb.append(COMMA);
-                sb.append(SPACE);
-                sb.append(exchangeRateByDate.getValue());
-                sb.append("\n");
-            }
-        } catch (IllegalArgumentException iae) {
-            LOGGER.log(Level.SEVERE, iae.getMessage());
+    private void doAppendMonthlyExchangeRate(MonthlyExchangeRate monthlyExchangeRate, StringBuilder sb) {
+        if (sb.length() > 0) {
+            sb.append("\n");
         }
-    }
-
-    private void doAppendMonthlyExchangeRate(String yearMonth, StringBuilder sb) {
-        try {
-            LocalDate date = Dates.toFirstDateOfYearMonth(yearMonth);
-            doAppendMonthlyExchangeRate(date, sb);
-        } catch (DateTimeParseException dtpe) {
-            LOGGER.log(Level.SEVERE, messageForWrongDate(yearMonth));
+        for (Map.Entry<LocalDate, BigDecimal> exchangeRateByDate : monthlyExchangeRate.getMonthlyExchangeRate().entrySet()) {
+            sb.append(PROMPT);
+            sb.append(exchangeRateByDate.getKey());
+            sb.append(COMMA);
+            sb.append(SPACE);
+            sb.append(exchangeRateByDate.getValue());
+            sb.append("\n");
         }
     }
 
     private void queryBySpecificYearMonths(String value) {
         LOGGER.info("Obtener tasa de cambio por año-mes");
+        ExchangeRateClient wsClient = new ExchangeRateClient();
+        MonthlyExchangeRate monthlyExchangeRate;
 
         StringBuilder result = new StringBuilder(SPACE);
         CLIHelper.OptionListValue optionListValue = new CLIHelper.OptionListValue(value);
@@ -146,7 +127,16 @@ public class ExchangeRateCLI {
             Object obj = optionListValue.getValues()[i];
 
             if (obj instanceof String) {
-                doAppendMonthlyExchangeRate((String) obj, result);
+                String yearMonth = (String) obj;
+
+                try {
+                    LocalDate date = Dates.toFirstDateOfYearMonth(yearMonth);
+                    monthlyExchangeRate = wsClient.getMonthlyExchangeRate(date);
+
+                    doAppendMonthlyExchangeRate(monthlyExchangeRate, result);
+                } catch (DateTimeParseException dtpe) {
+                    LOGGER.log(Level.SEVERE, messageForWrongDate(yearMonth));
+                }
             } else if (obj instanceof CLIHelper.OptionRangeValue) {
                 CLIHelper.OptionRangeValue range = (CLIHelper.OptionRangeValue) obj;
 
@@ -158,7 +148,8 @@ public class ExchangeRateCLI {
                     Dates.validateDate1IsBeforeDate2(date1, date2);
 
                     while (date1.compareTo(date2) <= 0) {
-                        doAppendMonthlyExchangeRate(date1, result);
+                        monthlyExchangeRate = wsClient.getMonthlyExchangeRate(date1);
+                        doAppendMonthlyExchangeRate(monthlyExchangeRate, result);
                         date1 = date1.plusMonths(1);
                     }
                 } catch (DateTimeParseException dtpe) {
