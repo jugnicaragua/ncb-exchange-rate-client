@@ -94,20 +94,17 @@ public class MonthlyExchangeRate {
     }
 
     public Map<LocalDate, BigDecimal> getExchangeRateBetween(LocalDate date1, LocalDate date2) {
-        LocalDate _date1 = Objects.requireNonNull(date1);
-        LocalDate _date2 = Objects.requireNonNull(date2);
+        Objects.requireNonNull(date1);
+        Objects.requireNonNull(date2);
 
-        if (date2.isBefore(date1)) {
-            _date1 = date2;
-            _date2 = date1;
-        }
+        Dates.validateDate1IsBeforeDate2(date1, date2);
 
-        if (_date1.compareTo(firstDate) >= 0 && _date1.compareTo(lastDate) <= 0 &&
-                _date2.compareTo(firstDate) >= 0 && _date2.compareTo(lastDate) <= 0) {
+        if (date1.compareTo(firstDate) >= 0 && date1.compareTo(lastDate) <= 0 &&
+                date2.compareTo(firstDate) >= 0 && date2.compareTo(lastDate) <= 0) {
             Map<LocalDate, BigDecimal> rangeOfValues = new TreeMap<>();
-            while (_date1.compareTo(_date2) <= 0) {
-                rangeOfValues.put(_date1, valuesByLocalDate.getOrDefault(_date1, BigDecimal.ZERO));
-                _date1 = _date1.plusDays(1);
+            while (date1.compareTo(date2) <= 0) {
+                rangeOfValues.put(date1, valuesByLocalDate.getOrDefault(date1, BigDecimal.ZERO));
+                date1 = date1.plusDays(1);
             }
             return Collections.unmodifiableMap(rangeOfValues);
         } else {
