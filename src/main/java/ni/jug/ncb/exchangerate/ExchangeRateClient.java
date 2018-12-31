@@ -22,17 +22,22 @@ public class ExchangeRateClient {
         return new TipoCambioBCN().getTipoCambioBCNSoap();
     }
 
-    public void doValidateYear(int year) {
-        int currentYear = LocalDate.now().getYear();
-
-        if (year < MINIMUM_YEAR || year > currentYear) {
-            throw new IllegalArgumentException("El año de consulta [" + year + "] debe estar entre [" + MINIMUM_YEAR + ", " + currentYear +
-                    "] inclusive");
-        }
+    private void doValidateYear(int year, Month month) {
+        doValidateYear(LocalDate.of(year, month, 1));
     }
 
-    public void doValidateYear(LocalDate date) {
-        doValidateYear(date.getYear());
+    private void doValidateYear(LocalDate date) {
+        LocalDate now = LocalDate.now();
+        int currentYear = now.getYear();
+
+        if (now.getYear() >= MINIMUM_YEAR && now.getMonth() == Month.DECEMBER && date.getYear() == (now.getYear() + 1) &&
+                date.getMonth() == Month.JANUARY) {
+            ++currentYear;
+        }
+        if (date.getYear() < MINIMUM_YEAR || date.getYear() > currentYear) {
+            throw new IllegalArgumentException("El año de consulta [" + date.getYear() + "] debe estar entre [" + MINIMUM_YEAR + ", " + currentYear +
+                    "] inclusive");
+        }
     }
 
     public BigDecimal getExchangeRate(LocalDate date) {
@@ -48,7 +53,7 @@ public class ExchangeRateClient {
 
     public MonthlyExchangeRate getMonthlyExchangeRate(int year, Month month) {
         Objects.requireNonNull(month);
-        doValidateYear(year);
+        doValidateYear(year, month);
         RecuperaTCMesResponse.RecuperaTCMesResult result = getPort().recuperaTCMes(year, month.getValue());
         return new MonthlyExchangeRate(result);
     }
