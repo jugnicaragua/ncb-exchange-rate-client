@@ -2,95 +2,53 @@ package ni.jug.ncb.exchangerate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
-import ni.jug.ncb.exchangerate.ws.RecuperaTCMesResponse;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.Text;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
 
 /**
  *
  * @author Armando Alaniz
- * @version 1.0
+ * @version 2.0
  * @since 1.0
  */
 public class MonthlyExchangeRate {
 
-    private final Map<LocalDate, BigDecimal> valuesByLocalDate;
+    private final Map<LocalDate, BigDecimal> valuesByDate;
     private final LocalDate firstDate;
     private final LocalDate lastDate;
-    private final boolean thereIsAGap;
+    private final boolean isIncomplete;
     private final int size;
 
-    public MonthlyExchangeRate(RecuperaTCMesResponse.RecuperaTCMesResult result) {
-        valuesByLocalDate = processResult(result);
-        if (valuesByLocalDate.isEmpty()) {
+    public MonthlyExchangeRate(MonthlyExchangeRateDataReader monthlyData) {
+        valuesByDate = monthlyData.processResult();
+        if (valuesByDate.isEmpty()) {
             firstDate = null;
             lastDate = null;
-            thereIsAGap = false;
+            isIncomplete = false;
             size = 0;
         } else {
-            LocalDate _date = valuesByLocalDate.keySet().iterator().next();
+            LocalDate _date = valuesByDate.keySet().iterator().next();
             firstDate = LocalDate.of(_date.getYear(), _date.getMonth(), 1);
             lastDate = firstDate.plusMonths(1).minusDays(1);
-            thereIsAGap = valuesByLocalDate.size() != ChronoUnit.DAYS.between(firstDate, lastDate.plusDays(1));
-            size = valuesByLocalDate.size();
+            isIncomplete = valuesByDate.size() != ChronoUnit.DAYS.between(firstDate, lastDate.plusDays(1));
+            size = valuesByDate.size();
         }
-    }
-
-    private Map<LocalDate, BigDecimal> processResult(RecuperaTCMesResponse.RecuperaTCMesResult result) {
-        Map<LocalDate, BigDecimal> valuesByDate = new TreeMap<>();
-        List<Object> content = result.getContent();
-
-        if (content.isEmpty()) {
-            return valuesByDate;
-        }
-
-        Element root = (Element) result.getContent().get(0);
-        Node exchangeRateNode = root.getFirstChild();
-        while (exchangeRateNode != null) {
-            String dateStr = null;
-            String value = null;
-
-            Node child = exchangeRateNode.getFirstChild();
-            while (child != null) {
-                if ("Fecha".equals(child.getNodeName())) {
-                    dateStr = ((Text) child.getFirstChild()).getData();
-                } else if ("Valor".equals(child.getNodeName())) {
-                    value = ((Text) child.getFirstChild()).getData();
-                }
-
-                if (dateStr != null && value != null) {
-                    break;
-                }
-
-                child = child.getNextSibling();
-            }
-
-            if (dateStr != null && value != null) {
-                LocalDate date = LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE);
-                valuesByDate.put(date, new BigDecimal(value));
-            }
-
-            exchangeRateNode = exchangeRateNode.getNextSibling();
-        }
-
-        return valuesByDate;
     }
 
     public Map<LocalDate, BigDecimal> getMonthlyExchangeRate() {
-        return Collections.unmodifiableMap(valuesByLocalDate);
+        return Collections.unmodifiableMap(valuesByDate);
     }
 
     public BigDecimal getExchangeRate(LocalDate date) {
         Objects.requireNonNull(date);
-        return valuesByLocalDate.getOrDefault(date, BigDecimal.ZERO);
+        return valuesByDate.getOrDefault(date, BigDecimal.ZERO);
     }
 
     public BigDecimal getExchangeRate() {
-        return valuesByLocalDate.getOrDefault(LocalDate.now(), BigDecimal.ZERO);
+        return valuesByDate.getOrDefault(LocalDate.now(), BigDecimal.ZERO);
     }
 
     public Map<LocalDate, BigDecimal> getExchangeRateBetween(LocalDate date1, LocalDate date2) {
@@ -103,7 +61,7 @@ public class MonthlyExchangeRate {
                 date2.compareTo(firstDate) >= 0 && date2.compareTo(lastDate) <= 0) {
             Map<LocalDate, BigDecimal> rangeOfValues = new TreeMap<>();
             while (date1.compareTo(date2) <= 0) {
-                rangeOfValues.put(date1, valuesByLocalDate.getOrDefault(date1, BigDecimal.ZERO));
+                rangeOfValues.put(date1, valuesByDate.getOrDefault(date1, BigDecimal.ZERO));
                 date1 = date1.plusDays(1);
             }
             return Collections.unmodifiableMap(rangeOfValues);
@@ -113,24 +71,28 @@ public class MonthlyExchangeRate {
     }
 
     public BigDecimal getFirstExchangeRate() {
-        return valuesByLocalDate.getOrDefault(firstDate, BigDecimal.ZERO);
+        return valuesByDate.getOrDefault(firstDate, BigDecimal.ZERO);
     }
 
     public BigDecimal getLastExchangeRate() {
-        return valuesByLocalDate.getOrDefault(lastDate, BigDecimal.ZERO);
+        return valuesByDate.getOrDefault(lastDate, BigDecimal.ZERO);
     }
 
-    public boolean getThereIsAGap() {
-        return thereIsAGap;
+    public boolean isIncomplete() {
+        return isIncomplete;
     }
 
     public int size() {
         return size;
     }
 
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
     @Override
     public String toString() {
-        return "MonthlyExchangeRate{" + valuesByLocalDate + '}';
+        return "MonthlyExchangeRate{" + valuesByDate + '}';
     }
 
 }

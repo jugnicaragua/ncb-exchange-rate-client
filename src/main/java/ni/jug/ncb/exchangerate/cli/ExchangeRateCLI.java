@@ -8,12 +8,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import ni.jug.ncb.exchangerate.Dates;
 import ni.jug.ncb.exchangerate.ExchangeRateClient;
+import ni.jug.ncb.exchangerate.ExchangeRateFailsafeClient;
 import ni.jug.ncb.exchangerate.MonthlyExchangeRate;
 
 /**
  *
  * @author Armando Alaniz
- * @version 1.0
+ * @version 2.0
  * @since 1.0
  */
 public class ExchangeRateCLI {
@@ -37,6 +38,10 @@ public class ExchangeRateCLI {
         help.append("Por ejemplo: -ym=[año]-[mes], -ym=[año1]-[mes1]:[año2]-[mes2], -ym=[año1]-[mes1],[año2]-[mes2],...\n");
     }
 
+    private ExchangeRateClient getClient() {
+        return new ExchangeRateFailsafeClient();
+    }
+
     private String messageForWrongDate(String strDate) {
         return "El valor [" + strDate + "] no es una fecha. Ingrese una fecha en formato ISO";
     }
@@ -54,7 +59,7 @@ public class ExchangeRateCLI {
 
     private void queryBySpecificDates(String value) {
         LOGGER.info("Obtener tasa de cambio por fecha");
-        ExchangeRateClient wsClient = new ExchangeRateClient();
+        ExchangeRateClient client = getClient();
         BigDecimal exchangeRate;
 
         StringBuilder result = new StringBuilder(SPACE);
@@ -67,7 +72,7 @@ public class ExchangeRateCLI {
 
                 try {
                     LocalDate date = Dates.toLocalDate(strDate);
-                    exchangeRate = wsClient.getExchangeRate(date);
+                    exchangeRate = client.getExchangeRate(date);
 
                     doAppendExchangeRateByDate(date, exchangeRate, result);
                 } catch (DateTimeParseException dtpe) {
@@ -83,7 +88,7 @@ public class ExchangeRateCLI {
                     Dates.validateDate1IsBeforeDate2(date1, date2);
 
                     while (date1.compareTo(date2) <= 0) {
-                        exchangeRate = wsClient.getExchangeRate(date1);
+                        exchangeRate = client.getExchangeRate(date1);
                         doAppendExchangeRateByDate(date1, exchangeRate, result);
                         date1 = date1.plusDays(1);
                     }
@@ -118,7 +123,7 @@ public class ExchangeRateCLI {
 
     private void queryBySpecificYearMonths(String value) {
         LOGGER.info("Obtener tasa de cambio por año-mes");
-        ExchangeRateClient wsClient = new ExchangeRateClient();
+        ExchangeRateClient client = getClient();
         MonthlyExchangeRate monthlyExchangeRate;
 
         StringBuilder result = new StringBuilder(SPACE);
@@ -131,7 +136,7 @@ public class ExchangeRateCLI {
 
                 try {
                     LocalDate date = Dates.toFirstDateOfYearMonth(yearMonth);
-                    monthlyExchangeRate = wsClient.getMonthlyExchangeRate(date);
+                    monthlyExchangeRate = client.getMonthlyExchangeRate(date);
 
                     doAppendMonthlyExchangeRate(monthlyExchangeRate, result);
                 } catch (DateTimeParseException dtpe) {
@@ -148,7 +153,7 @@ public class ExchangeRateCLI {
                     Dates.validateDate1IsBeforeDate2(date1, date2);
 
                     while (date1.compareTo(date2) <= 0) {
-                        monthlyExchangeRate = wsClient.getMonthlyExchangeRate(date1);
+                        monthlyExchangeRate = client.getMonthlyExchangeRate(date1);
                         doAppendMonthlyExchangeRate(monthlyExchangeRate, result);
                         date1 = date1.plusMonths(1);
                     }
@@ -195,7 +200,7 @@ public class ExchangeRateCLI {
         try {
             new ExchangeRateCLI().handleRequest(args);
         } catch (IllegalArgumentException iae) {
-            LOGGER.log(Level.SEVERE, iae.getMessage());
+            LOGGER.severe(iae.getMessage());
             printUsage();
         }
     }

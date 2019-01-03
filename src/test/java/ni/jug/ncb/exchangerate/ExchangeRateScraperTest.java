@@ -11,13 +11,17 @@ import org.junit.jupiter.api.Test;
  *
  * @author Armando Alaniz
  * @version 1.0
- * @since 1.0
+ * @since 2.0
  */
-public class ExchangeRateClientTest {
+public class ExchangeRateScraperTest {
+
+    private ExchangeRateClient getClient() {
+        return new ExchangeRateScraper();
+    }
 
     @Test
     public void testExchangeRateAtSpecificDate() {
-        ExchangeRateClient client = new ExchangeRateClient();
+        ExchangeRateClient client = getClient();
 
         Assertions.assertEquals(new BigDecimal("31.9396"), client.getExchangeRate(LocalDate.of(2018, 10, 1)));
         Assertions.assertEquals(new BigDecimal("32.0679"), client.getExchangeRate(LocalDate.of(2018, 10, 31)));
@@ -25,7 +29,7 @@ public class ExchangeRateClientTest {
 
     @Test
     public void testMonthlyExchangeRateAtSpecificDate() {
-        ExchangeRateClient client = new ExchangeRateClient();
+        ExchangeRateClient client = getClient();
         MonthlyExchangeRate monthlyExchangeRate = client.getMonthlyExchangeRate(2018, 10);
 
         Assertions.assertEquals(31, monthlyExchangeRate.size());
@@ -33,7 +37,7 @@ public class ExchangeRateClientTest {
         Assertions.assertEquals(new BigDecimal("32.0679"), monthlyExchangeRate.getLastExchangeRate());
         Assertions.assertEquals(new BigDecimal("31.9994"), monthlyExchangeRate.getExchangeRate(LocalDate.of(2018, 10, 15)));
         Assertions.assertEquals(BigDecimal.ZERO, monthlyExchangeRate.getExchangeRate(LocalDate.of(2018, 9, 30)));
-        Assertions.assertFalse(monthlyExchangeRate.getThereIsAGap());
+        Assertions.assertFalse(monthlyExchangeRate.isIncomplete());
 
         LocalDate date1 = LocalDate.of(2018, 10, 1);
         LocalDate date2 = LocalDate.of(2018, 10, 15);
@@ -45,7 +49,7 @@ public class ExchangeRateClientTest {
 
     @Test
     public void testValidationOfYear() {
-        ExchangeRateClient client = new ExchangeRateClient();
+        ExchangeRateClient client = getClient();
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             client.getExchangeRate(LocalDate.of(2011, 12, 31));
