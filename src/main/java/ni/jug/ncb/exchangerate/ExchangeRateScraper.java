@@ -24,7 +24,7 @@ public class ExchangeRateScraper implements ExchangeRateClient {
         return new StringBuilder(URL_EXCHANGE_RATE).append(String.format(QUERY_STRING, month, year)).toString();
     }
 
-    private static MonthlyExchangeRateHTMLDataReader scrapHTMLPage(int year, Month month) {
+    private static MonthlyExchangeRateHTMLDataReader createHTMLReader(int year, Month month) {
         try {
             Document doc = Jsoup.connect(buildURL(year, month.getValue())).validateTLSCertificates(false).get();
             return new MonthlyExchangeRateHTMLDataReader(doc, year, month);
@@ -43,7 +43,7 @@ public class ExchangeRateScraper implements ExchangeRateClient {
     public MonthlyExchangeRate getMonthlyExchangeRate(int year, Month month) {
         Objects.requireNonNull(month);
         doValidateYear(year, month);
-        return new MonthlyExchangeRate(scrapHTMLPage(year, month));
+        return new MonthlyExchangeRate(createHTMLReader(year, month));
     }
 
 }
