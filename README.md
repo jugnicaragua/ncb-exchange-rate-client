@@ -1,4 +1,15 @@
-# ncb-exchange-rate-client
+# DEPRECATED ⛔️  ncb-exchange-rate-client
+.
+
+.
+
+** Este repositorio esta obsoleto, por favor usar https://github.com/jug-ni/exchange-rate-client 
+.
+
+.
+
+.
+
 
 Es una librería que consulta el servicio web SOAP o el sitio web del Banco Central de Nicaragua (BCN) para obtener la tasa de cambio para la fecha o mes-año consultado. Si por alguna razón el servicio web del BCN no estuviera disponible, la librería extraería los datos requeridos del sitio web del BCN.
 
